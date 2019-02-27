@@ -1,0 +1,25 @@
+{
+  "name": "nodebb-plugin-mff-publisher",
+  "version": "1.0.0",
+  "description": "A NodeBB plugin to publish tutorial",
+  "main": "library.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MinecraftForgeFrance/nodebb-plugin-mff-publisher.git"
+  },
+  "keywords": [
+    "nodebb"
+  ],
+  "author": {
+    "name": "Superloup10",
+    "email": "Superloup10@gmail.com"
+  },
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/MinecraftForgeFrance/nodebb-plugin-mff-publisher/issues"
+  },
+  "homepage": "https://github.com/MinecraftForgeFrance/nodebb-plugin-mff-publisher#readme",
+  "nbbpm": {
+    "compatibility": "^1.11.0"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "nodebb-plugin-mff-publisher",
+  "url": "https://github.com/MinecraftForgeFrance/nodebb-plugin-mff-publisher",
+  "library": "./library.js",
+  "less": [
+    "static/style.less"
+  ],
+  "hooks": [
+    { "hook": "filter:widgets.getWidgets", "method": "getWidget"},
+    { "hook": "filter:widgets.render:mff-publisher", "method": "renderWidget" }
+  ],
+  "scripts": [
+    "static/src/client.js"
+  ],
+  "template": "static/templates",
+  "languages": "languages"
+}
