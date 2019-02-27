@@ -6,12 +6,17 @@
     "static/style.less"
   ],
   "hooks": [
-    { "hook": "filter:widgets.getWidgets", "method": "getWidget"},
-    { "hook": "filter:widgets.render:mff-publisher", "method": "renderWidget" }
+    {"hook": "static:app.load", "method": "init"},
+    {"hook": "filter:admin.header.build", "method": "addAdminToNav"},
+    {"hook": "filter:widgets.getWidgets", "method": "getWidget"},
+    {"hook": "filter:widgets.render:mff-publisher", "method": "renderWidget"}
   ],
   "scripts": [
     "static/src/client.js"
   ],
-  "template": "static/templates",
+  "acpScripts": [
+    "static/src/admin.js"
+  ],
+  "templates": "./static/templates",
   "languages": "languages"
 }
