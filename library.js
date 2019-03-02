@@ -5,6 +5,8 @@ const nconf = require.main.require("nconf");
 const search = require.main.require("./src/search");
 const topics = require.main.require('./src/topics');
 
+const categoryIdRegex = /c-(\d)+/g;
+
 const Publisher = {
     publishCategoryId: 0,
     discordWebHook: "change-me",
@@ -15,14 +17,16 @@ const Publisher = {
         app.get("/admin/plugins/mff-publisher", middleware.admin.buildHeader, renderAdmin);
         app.get("/api/admin/plugins/mff-publisher", renderAdmin);
 
+        app.get("/publisherapi/topics", getPreviousTopics);
+
         meta.settings.get("mff-publisher", (error, options) => {
             if (error) {
                 console.log(`[plugin/mff-publisher] Unable to retrieve settings, will keep defaults: ${error.message}`);
             } else {
-                if(options.hasOwnProperty("publishcategoryid")) {
+                if (options.hasOwnProperty("publishcategoryid")) {
                     Publisher.publishCategoryId = options["publishcategoryid"];
                 }
-                if(options.hasOwnProperty("discordwebhook")) {
+                if (options.hasOwnProperty("discordwebhook")) {
                     Publisher.discordWebHook = options["discordwebhook"];
                 }
             }
@@ -64,68 +68,66 @@ const Publisher = {
     }
 };
 
-function renderAdmin(req, res, next) {
+function renderAdmin(req, res) {
     res.render("admin/plugins/mff-publisher");
 }
 
+
+// TODO Change name
 function getPreviousTopics(req, res) {
     searchInPost(req, res, [Publisher.publishCategoryId])
 }
 
 function searchInPost(req, res, categories) {
     const data = {
-        query: req.query.term,
+        query: '',
         searchIn: 'titles',
         matchWords: 'all',
         categories: categories,
-        searchChildren: true,
+        searchChildren: false,
         hasTags: req.query.hasTags,
         sortBy: '',
         qs: req.query
     };
 
-    // TODO Change
-    search.search(data, function(err, results) {
-        if (err) {
-            console.log(err);
+    search.search(data, (error, results) => {
+        if (error) {
+            console.log(error);
             return res.status(500).json({error: "Error while performing the search"});
         }
         let tids = results.posts.map(post => post && post.tid);
-        topics.getTopicsTags(tids, (err2, postTags) => {
-            if(err2) {
-                console.log(err2);
-                return res.status(500).json({error: "Error while getting topic tags"});
+        topics.getTopicsTags(tids, (error2, postTags) => {
+            if (error2) {
+                console.log(error2);
+                return res.status(500).json({error: "Error while getting topic tags"})
             }
 
-            if(results.posts.length == 0) {
+            if (results.posts.length === 0) {
                 return res.status(200).json({message: "No result"});
             }
 
             let response = {};
-            if(!req.query.hasTags) { // only add none tag if there is not tags filter in the request
-                response['none'] = [];
-            }
-            for(tags of postTags) {
-                for(tag of tags) {
-                    if(isTagInFilter(tag, req.query.hasTags)) {
-                        response[tag] = [];
+            for (let tags of postTags) {
+                for (let tag of tags) {
+                    if (tag.match(categoryIdRegex)) {
+                        if (isTagInFilter(tag, req.query.hasTags)) {
+                            response[tag] = [];
+                        }
                     }
                 }
             }
 
-            for(let i in results.posts) {
+            for (let i in results.posts) {
                 let post = {
                     title: results.posts[i].topic.title,
                     url: nconf.get('url') + '/topic/' + results.posts[i].topic.slug
                 };
-                if(postTags[i].length == 0) {
-                    response['none'].push(post);
-                }
-                else {
-                    for(tag of postTags[i]) {
-                        // avoid duplicate if topic has multiple tags
-                        if(isTagInFilter(tag, req.query.hasTags)) {
-                            response[tag].push(post);
+                if (postTags[i].length !== 0) {
+                    for (let tag of postTags[i]) {
+                        if (tag.match(categoryIdRegex)) {
+                            if (isTagInFilter(tag, req.query.hasTags)) {
+                                response[tag].push(post);
+                            }
                         }
                     }
                 }
@@ -133,6 +135,10 @@ function searchInPost(req, res, categories) {
             return res.status(200).json(response);
         });
     });
+}
+
+function isTagInFilter(tag, tagsFilter) {
+    return !tagsFilter || (tagsFilter && tagsFilter.indexOf(tag) >= 0);
 }
 
 module.exports = Publisher;
